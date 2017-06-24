@@ -1,0 +1,251 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Metadata": {
+        "AWS::CloudFormation::Designer": {
+            "e7c6bcd0-c0ec-46f4-9981-da0cee670c14": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 220,
+                    "y": 70
+                },
+                "z": 0,
+                "embeds": []
+            },
+            "bdc04f1a-d927-4669-9cad-73f16e17ae95": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 490,
+                    "y": 130
+                },
+                "z": 0,
+                "embeds": [],
+                "isconnectedto": [
+                    "17df130e-33db-4ce5-90a3-feb3149ad7d3"
+                ],
+                "isassociatedwith": [
+                    "fb3d6d25-08ab-4cdf-bfa8-fb0e77a205aa"
+                ]
+            },
+            "110a5d06-5979-496d-97b5-6a22d70b501c": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 650,
+                    "y": 250
+                },
+                "z": 0,
+                "embeds": [],
+                "isrelatedto": [
+                    "82cd0f64-aa01-478c-b8ee-d12cd39ca03a"
+                ]
+            },
+            "82cd0f64-aa01-478c-b8ee-d12cd39ca03a": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 650,
+                    "y": 20
+                },
+                "z": 0,
+                "embeds": []
+            },
+            "17df130e-33db-4ce5-90a3-feb3149ad7d3": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 490,
+                    "y": 20
+                },
+                "z": 0,
+                "embeds": [],
+                "ismemberof": [
+                    "82cd0f64-aa01-478c-b8ee-d12cd39ca03a"
+                ]
+            },
+            "fb3d6d25-08ab-4cdf-bfa8-fb0e77a205aa": {
+                "size": {
+                    "width": 60,
+                    "height": 60
+                },
+                "position": {
+                    "x": 490,
+                    "y": 250
+                },
+                "z": 0,
+                "embeds": [],
+                "ismemberof": [
+                    "110a5d06-5979-496d-97b5-6a22d70b501c"
+                ]
+            }
+        }
+    },
+    "Resources": {
+        "ELBSecGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "World-wide open 443, 80 ports",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "443",
+                        "ToPort": "443",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "82cd0f64-aa01-478c-b8ee-d12cd39ca03a"
+                }
+            }
+        },
+        "ASG": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Properties": {
+                "LaunchConfigurationName": {
+                    "Ref": "LaunchCfg"
+                },
+                "LoadBalancerNames": [
+                    {
+                        "Ref": "ELB"
+                    }
+                ],
+                "AvailabilityZones": {
+                    "Fn::GetAZs": ""
+                },
+                "MinSize": "3",
+                "MaxSize": "6",
+                "HealthCheckType": "ELB",
+                "HealthCheckGracePeriod": "5"
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "bdc04f1a-d927-4669-9cad-73f16e17ae95"
+                }
+            }
+        },
+        "ELB": {
+            "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "17df130e-33db-4ce5-90a3-feb3149ad7d3"
+                }
+            },
+            "Properties": {
+                "SecurityGroups": [
+                    {
+                        "Fn::GetAtt": [
+                            "ELBSecGroup",
+                            "GroupId"
+                        ]
+                    }
+                ],
+                "AvailabilityZones": {
+                    "Fn::GetAZs": ""
+                },
+                "Listeners": [
+                    {
+                        "Protocol": "HTTP",
+                        "LoadBalancerPort": "80",
+                        "InstanceProtocol": "HTTP",
+                        "InstancePort": "8080"
+                    },
+                    {
+                        "Protocol": "TCP",
+                        "LoadBalancerPort": "443",
+                        "InstanceProtocol": "TCP",
+                        "InstancePort": "8080"
+                    }
+                ],
+                "HealthCheck": {
+                    "Target": "HTTP:8080/",
+                    "HealthyThreshold": "5",
+                    "UnhealthyThreshold": "3",
+                    "Interval": "5",
+                    "Timeout": "3"
+                }
+            }
+        },
+        "LaunchCfg": {
+            "Type": "AWS::AutoScaling::LaunchConfiguration",
+            "Properties": {
+                "ImageId": "ami-8b92b4ee",
+                "InstanceType": "t2.micro",
+                "SecurityGroups": [
+                    {
+                        "Ref": "LaunchSecGroup"
+                    }
+                ],
+                "KeyName": "artem_buria",
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#!/bin/bash\n",
+                                "apt-get update -y \n",
+                                "apt-get install apache2 -y\n",
+                                "sed -i '5s/.*/Listen 8080/' '/etc/apache2/ports.conf'\n",
+                                "systemctl restart apache2\n",
+                                "systemctl enable apache2\n"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "fb3d6d25-08ab-4cdf-bfa8-fb0e77a205aa"
+                }
+            }
+        },
+        "LaunchSecGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Enable port 22 and port 8080",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "8080",
+                        "ToPort": "8080",
+                        "SourceSecurityGroupId": {
+                            "Fn::GetAtt": [
+                                "ELBSecGroup",
+                                "GroupId"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "Metadata": {
+                "AWS::CloudFormation::Designer": {
+                    "id": "110a5d06-5979-496d-97b5-6a22d70b501c"
+                }
+            }
+        }
+    }
+}
