@@ -1,0 +1,1 @@
+variable "elbsg_name" {default = "ELBSecurityGroup"}
