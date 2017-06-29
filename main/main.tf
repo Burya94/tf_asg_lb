@@ -15,7 +15,7 @@ module "launch_conf_secg"{
 
 module "launch_conf" {
 	source         = "../modules/LaunchConfiguration"
-	security_group = "${module.launch_conf_secg.sg_id}" 
+	security_group = "${module.launch_conf_secg.sg_id}"
 }
 
 
@@ -30,4 +30,3 @@ module "asg" {
 	lnch_conf     = "${module.launch_conf.lconf_id}"
 	load_balancer = "${module.elb.elb_id}"
 }
-
